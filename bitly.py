@@ -45,7 +45,7 @@ class Api(object):
         self.apikey = apikey
         self._urllib = urllib2
         
-    def shorten(self,longURLs,params={}):
+    def shorten(self, longURLs, params={}):
         """ 
             Takes either:
             A long URL string and returns shortened URL string
@@ -55,39 +55,31 @@ class Api(object):
         if not isinstance(longURLs, list):
             longURLs = [longURLs]
             want_result_list = False
-        
-        for index,url in enumerate(longURLs):
-            if not '://' in url:
-                longURLs[index] = "http://" + url
             
-        request = self._getURL("shorten",longURLs,params)
+        request = self._getURL("shorten", longURLs, params)
         result = self._fetchUrl(request)
         json = simplejson.loads(result)
-        self._CheckForError(json)
+        Api._CheckForError(json)
         
         results = json['results']
-        res = [self._extract_short_url(results[url]) for url in longURLs]
 
+        res = [results[url].get('shortUrl', None) for url in longURLs]
+        
         if want_result_list:
             return res
         else:
             return res[0]
 
-    def _extract_short_url(self,item):
-        if item['shortKeywordUrl'] == "":
-            return item['shortUrl']
-        else:
-            return item['shortKeywordUrl']
 
-    def expand(self,shortURL,params={}):
+    def expand(self, shortURL, params={}):
         """ Given a bit.ly url or hash, return long source url """
         request = self._getURL("expand",shortURL,params)
         result = self._fetchUrl(request)
         json = simplejson.loads(result)
-        self._CheckForError(json)
+        Api._CheckForError(json)
         return json['results'][string.split(shortURL, '/')[-1]]['longUrl']
 
-    def info(self,shortURL,params={}):
+    def info(self, shortURL, params={}):
         """ 
         Given a bit.ly url or hash, 
         return information about that page, 
@@ -96,23 +88,23 @@ class Api(object):
         request = self._getURL("info",shortURL,params)
         result = self._fetchUrl(request)
         json = simplejson.loads(result)
-        self._CheckForError(json)
+        Api._CheckForError(json)
         return json['results'][string.split(shortURL, '/')[-1]]
 
-    def stats(self,shortURL,params={}):
+    def stats(self, shortURL, params={}):
         """ Given a bit.ly url or hash, return traffic and referrer data.  """
         request = self._getURL("stats",shortURL,params)
         result = self._fetchUrl(request)
         json = simplejson.loads(result)
-        self._CheckForError(json)
+        Api._CheckForError(json)
         return Stats.NewFromJsonDict(json['results'])
 
-    def errors(self,params={}):
+    def errors(self, params={}):
         """ Get a list of bit.ly API error codes. """
         request = self._getURL("errors","",params)
         result = self._fetchUrl(request)
         json = simplejson.loads(result)
-        self._CheckForError(json)
+        Api._CheckForError(json)
         return json['results']
         
     def setUrllib(self, urllib):
@@ -123,7 +115,7 @@ class Api(object):
         '''
         self._urllib = urllib
     
-    def _getURL(self,verb,paramVal,more_params={}): 
+    def _getURL(self, verb, paramVal, more_params={}): 
         if not isinstance(paramVal, list):
             paramVal = [paramVal]
               
@@ -145,7 +137,7 @@ class Api(object):
         encoded_params = urllib.urlencode(params)
         return "%s%s?%s" % (BITLY_BASE_URL,verb,encoded_params)
        
-    def _fetchUrl(self,url):
+    def _fetchUrl(self, url):
         '''Fetch a URL
     
         Args:
@@ -159,7 +151,8 @@ class Api(object):
         url_data = self._urllib.urlopen(url).read()
         return url_data    
 
-    def _CheckForError(self, data):
+    @classmethod
+    def _CheckForError(cls, data):
         """Raises a BitlyError if bitly returns an error message.
     
         Args:
@@ -171,7 +164,7 @@ class Api(object):
         # to check first, rather than try and catch the exception
         if 'ERROR' in data or data['statusCode'] == 'ERROR':
             raise BitlyError, data['errorMessage']
-        for key in data['results']:
+        for key in data['results']:            
             if type(data['results']) is dict and type(data['results'][key]) is dict:
                 if 'statusCode' in data['results'][key] and data['results'][key]['statusCode'] == 'ERROR':
                     raise BitlyError, data['results'][key]['errorMessage'] 
@@ -202,8 +195,8 @@ class Stats(object):
 
         
 if __name__ == '__main__':
-    testURL1="www.yahoo.com"
-    testURL2="www.cnn.com"
+    testURL1="http://www.yahoo.com"
+    testURL2="http://www.cnn.com"
     a=Api(login="pythonbitly",apikey="R_06871db6b7fd31a4242709acaf1b6648")
     short=a.shorten(testURL1)    
     print "Short URL = %s" % short
@@ -220,6 +213,6 @@ if __name__ == '__main__':
     print "User clicks %s, total clicks: %s" % (stats.user_clicks,stats.total_clicks)
     errors=a.errors()
     print "Errors: %s" % errors
-    testURL3=["www.google.com"]
+    testURL3=["http://www.google.com"]
     short=a.shorten(testURL3) 
     print "Short url in list = %s" % short
