@@ -16,6 +16,7 @@
 
 import simplejson
 import urllib, urllib2
+from urllib2 import URLError
 import urlparse
 import string
 
@@ -30,6 +31,7 @@ VERBS_PARAM = {
          'errors':'',
 }
 
+
 class BitlyError(Exception):
   '''Base class for bitly errors'''
   
@@ -37,6 +39,11 @@ class BitlyError(Exception):
   def message(self):
     '''Returns the first argument used to construct this error.'''
     return self.args[0]
+    
+
+class BitlyTimeoutError(BitlyError):
+    pass
+    
 
 class Api(object):
     """ API class for bit.ly """
@@ -148,8 +155,15 @@ class Api(object):
         '''
         
         # Open and return the URL 
+        try:
+            url_data = self._urllib.urlopen(url=url, timeout=1).read()
+        except URLError, err:
+            # nasty bit of hack, i know but unfortunatly urllib2 has no smart way of telling me 
+            # that it was an timeout error
+            if err.reason == 'urlopen error timed out':
+                raise BitlyTimeoutError('The url %s has timed out' % url)
+            raise err
         
-        url_data = self._urllib.urlopen(url=url, timeout=1).read()
         return url_data
         
 

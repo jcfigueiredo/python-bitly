@@ -66,7 +66,7 @@ def test_checking_for_errors():
     yield verifying_invalid_error_key
     yield verifying_invalid_status_code
     yield verifying_invalid_status_code_and_invalid_error_key
-    yield verifying_invalid_status_code
+    yield verifying_invalid_item
 
 def verifying_invalid_error_key():
     #invalid error key
@@ -99,9 +99,11 @@ def verifying_invalid_item():
 
 def test_checking_for_timeout():
     api = bitly.Api(login='jcfigueiredo', apikey='R_1cf5dc0fa14c2df34261fb620bd256aa')
-    yield verifying_the_the_original_url_return_on_timeout, api
+    yield verifying_that_a_custom_exception_is_raised_on_timeout, api
+    yield verifying_that_urlerror_exceptions_are_reraised_but_timeout_exceptions, api
+    yield verifying_that_any_other_exceptions_are_reraised_but_timeout_exceptions, api
 
-def verifying_the_the_original_url_return_on_timeout(api):
+def verifying_that_a_custom_exception_is_raised_on_timeout(api):
     mox = Mox()
     
     bitly_shortening_url = 'http://api.bit.ly/shorten?login=jcfigueiredo&version=2.0.1&apiKey=R_1cf5dc0fa14c2df34261fb620bd256aa&format=json&longUrl=http%3A%2F%2Fwww.matandorobosgigantes.com'
@@ -113,7 +115,41 @@ def verifying_the_the_original_url_return_on_timeout(api):
     
     try:
         mox.ReplayAll()
+        assert_raises(bitly.BitlyTimeoutError, api.shorten, url_to_be_shortened)
+        mox.VerifyAll()
+    finally:
+        mox.UnsetStubs()
+
+def verifying_that_urlerror_exceptions_are_reraised_but_timeout_exceptions(api):
+    mox = Mox()
+    
+    bitly_shortening_url = 'http://api.bit.ly/shorten?login=jcfigueiredo&version=2.0.1&apiKey=R_1cf5dc0fa14c2df34261fb620bd256aa&format=json&longUrl=http%3A%2F%2Fwww.matandorobosgigantes.com'
+    
+    mox.StubOutWithMock(urllib2, "urlopen")
+    urllib2.urlopen(url=bitly_shortening_url, timeout=1).AndRaise(URLError('something different from timeout'))
+    
+    url_to_be_shortened = 'http://www.matandorobosgigantes.com'
+    
+    try:
+        mox.ReplayAll()
         assert_raises(URLError, api.shorten, url_to_be_shortened)
         mox.VerifyAll()
-    except Exception:
+    finally:
+        mox.UnsetStubs()
+
+def verifying_that_any_other_exceptions_are_reraised_but_timeout_exceptions(api):
+    mox = Mox()
+    
+    bitly_shortening_url = 'http://api.bit.ly/shorten?login=jcfigueiredo&version=2.0.1&apiKey=R_1cf5dc0fa14c2df34261fb620bd256aa&format=json&longUrl=http%3A%2F%2Fwww.matandorobosgigantes.com'
+    
+    mox.StubOutWithMock(urllib2, "urlopen")
+    urllib2.urlopen(url=bitly_shortening_url, timeout=1).AndRaise(ValueError('something different'))
+    
+    url_to_be_shortened = 'http://www.matandorobosgigantes.com'
+    
+    try:
+        mox.ReplayAll()
+        assert_raises(ValueError, api.shorten, url_to_be_shortened)
+        mox.VerifyAll()
+    finally:
         mox.UnsetStubs()
