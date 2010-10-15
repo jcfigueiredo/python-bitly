@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import simplejson
-import urllib,urllib2
+import urllib, urllib2
 import urlparse
 import string
 
@@ -118,38 +118,40 @@ class Api(object):
     def _getURL(self, verb, paramVal, more_params={}): 
         if not isinstance(paramVal, list):
             paramVal = [paramVal]
-              
+        
         params = {
                   'version':BITLY_API_VERSION,
                   'format':'json',
                   'login':self.login,
                   'apiKey':self.apikey,
             }
-
+            
         params.update(more_params)
         params = params.items() 
                 
         verbParam = VERBS_PARAM[verb]   
         if verbParam:
             for val in paramVal:
-                params.append(( verbParam,val ))
-   
+                params.append(( verbParam, val ))
+            
         encoded_params = urllib.urlencode(params)
-        return "%s%s?%s" % (BITLY_BASE_URL,verb,encoded_params)
+        return "%s%s?%s" % (BITLY_BASE_URL, verb, encoded_params)
        
     def _fetchUrl(self, url):
         '''Fetch a URL
-    
+            
         Args:
           url: The URL to retrieve
-    
+            
         Returns:
           A string containing the body of the response.
         '''
-    
+        
         # Open and return the URL 
-        url_data = self._urllib.urlopen(url).read()
-        return url_data    
+        
+        url_data = self._urllib.urlopen(url=url, timeout=1).read()
+        return url_data
+        
 
     @classmethod
     def _CheckForError(cls, data):
@@ -184,7 +186,7 @@ class Stats(object):
     @staticmethod
     def NewFromJsonDict(data):
         '''Create a new instance based on a JSON dict.
-    
+        
         Args:
           data: A JSON dict, as converted from the JSON in the bitly API
         Returns:
