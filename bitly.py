@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+VERSION = '0.1'
+__version__ = VERSION
+
 import simplejson
 import urllib, urllib2
 from urllib2 import URLError

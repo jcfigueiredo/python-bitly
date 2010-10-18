@@ -1,3 +1,6 @@
 .svn
 *.pyc
 .coverage
+build/
+dist/
+*.egg-info/
