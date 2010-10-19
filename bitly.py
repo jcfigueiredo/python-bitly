@@ -23,7 +23,6 @@ from urllib2 import URLError
 import urlparse
 import string
 
-BITLY_BASE_URL = "http://api.bit.ly/"
 BITLY_API_VERSION = "2.0.1"
 
 VERBS_PARAM = { 
@@ -49,11 +48,24 @@ class BitlyTimeoutError(BitlyError):
     
 
 class Api(object):
+
+    ALLOWED_API_DOMAINS = {
+        'bit.ly': 'http://api.bit.ly/',
+        'j.mp': 'http://api.j.mp/',
+    }
+
+    domain = 'bit.ly'
+    
+    def get_api_domain(self):
+        return self.ALLOWED_API_DOMAINS[self.domain]
+        
     """ API class for bit.ly """
-    def __init__(self, login, apikey):
+    def __init__(self, login, apikey, domain=None):
         self.login = login
         self.apikey = apikey
         self._urllib = urllib2
+        if domain is not None:
+            self.domain = domain
         
     def shorten(self, longURLs, params={}):
         """ 
@@ -145,7 +157,7 @@ class Api(object):
                 params.append(( verbParam, val ))
             
         encoded_params = urllib.urlencode(params)
-        return "%s%s?%s" % (BITLY_BASE_URL, verb, encoded_params)
+        return "%s%s?%s" % (self.get_api_domain(), verb, encoded_params)
        
     def _fetchUrl(self, url):
         '''Fetch a URL

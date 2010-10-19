@@ -26,11 +26,11 @@ def should_have_an_API_authenticated_by_my_credentials(api):
 
 def should_shorten_an_url_consistently_when_a_single_string_url_is_provided(api):
     url_to_be_shortened = 'http://globoesporte.globo.com/motor/formula-1/noticia/2010/10/apos-maus-resultados-ferrari-reforca-apoio-massa-no-fim-da-temporada.html'
-    expected_url = 'http://bit.ly/9n93fw'
+    expected_hash = '/9n93fw'
     
     shortened_url = api.shorten(longURLs=url_to_be_shortened)
     
-    assert shortened_url == expected_url, 'The shortened version of %s url should\'ve been %s but was %s' % (url_to_be_shortened, expected_url, shortened_url)
+    assert shortened_url.endswith(expected_hash) , 'The shortened version of %s url should\'ve ended with %s but was %s' % (url_to_be_shortened, expected_url, shortened_url)
 
 def should_shorten_many_urls_consistently_when_a_list_of_urls_is_provided(api):
     urls_to_be_shortened = [ 'http://globoesporte.globo.com/motor/formula-1/noticia/2010/10/apos-maus-resultados-ferrari-reforca-apoio-massa-no-fim-da-temporada.html'
@@ -153,3 +153,9 @@ def verifying_that_any_other_exceptions_are_reraised_but_timeout_exceptions(api)
         mox.VerifyAll()
     finally:
         mox.UnsetStubs()
+
+def test_i_can_use_the_freaking_jmp_domain_instead():
+    api = bitly.Api(login='jcfigueiredo', apikey='R_1cf5dc0fa14c2df34261fb620bd256aa', domain='j.mp')
+    
+    yield should_have_an_API_authenticated_by_my_credentials, api
+    yield should_shorten_an_url_consistently_when_a_single_string_url_is_provided, api
