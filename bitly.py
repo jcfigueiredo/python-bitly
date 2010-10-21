@@ -19,11 +19,14 @@ __version__ = VERSION
 
 import simplejson
 import urllib, urllib2
+import socket
 from urllib2 import URLError
 import urlparse
 import string
 
 BITLY_API_VERSION = "2.0.1"
+
+TIMEOUT = 1 #SECONDS
 
 VERBS_PARAM = { 
          'shorten':'longUrl',               
@@ -171,9 +174,8 @@ class Api(object):
         
         # Open and return the URL 
         try:
-            import socket
-            timeout =  1
-            socket.setdefaulttimeout(timeout);
+
+            socket.setdefaulttimeout(TIMEOUT);
             url_data = self._urllib.urlopen(url=url).read()
         except URLError, err:
             # nasty bit of hack, i know but unfortunatly urllib2 has no smart way of telling me 
