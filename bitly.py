@@ -14,11 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION = '0.2'
+VERSION = '0.3'
 __version__ = VERSION
 
 import simplejson
-import urllib, urllib2
+import urllib
+import httplib2
 import socket
 from urllib2 import URLError
 import urlparse
@@ -66,7 +67,7 @@ class Api(object):
     def __init__(self, login, apikey, domain=None):
         self.login = login
         self.apikey = apikey
-        self._urllib = urllib2
+        self._urllib = httplib2
         if domain is not None:
             self.domain = domain
         
@@ -136,7 +137,7 @@ class Api(object):
         '''Override the default urllib implementation.
     
         Args:
-          urllib: an instance that supports the same API as the urllib2 module
+          urllib or httplib2
         '''
         self._urllib = urllib
     
@@ -174,13 +175,17 @@ class Api(object):
         
         # Open and return the URL 
         try:
-
-            socket.setdefaulttimeout(TIMEOUT);
-            url_data = self._urllib.urlopen(url=url).read()
-        except URLError, err:
+            if self._urllib is httplib2:
+                http = httplib2.Http(timeout=TIMEOUT)
+                resp, content = http.request(url)
+                url_data = content
+            else:
+                url_data = self._urllib.urlopen(url=url).read()
+                
+        except (URLError, socket.error), err:
             # nasty bit of hack, i know but unfortunatly urllib2 has no smart way of telling me 
             # that it was an timeout error
-            if err.reason == 'urlopen error timed out':
+            if hasattr(err,'reason') and err.reason == 'urlopen error timed out' or unicode(err) == u'timed out':
                 raise BitlyTimeoutError('The url %s has timed out' % url)
             raise err
         

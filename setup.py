@@ -15,6 +15,7 @@ setup(
     py_modules=['bitly'],
     install_requires=[
         'simplejson',
+        'httplib2'
     ],
 )
 

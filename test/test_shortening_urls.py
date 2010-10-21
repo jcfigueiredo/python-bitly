@@ -6,7 +6,7 @@ from urllib2 import URLError
 from mox import Mox
 
 import bitly
-from bitly import urllib2
+from bitly import httplib2
 
 def test_urls_shortening_scenario_for_plain_urls():
     api = bitly.Api(login='jcfigueiredo', apikey='R_1cf5dc0fa14c2df34261fb620bd256aa')
@@ -108,8 +108,8 @@ def verifying_that_a_custom_exception_is_raised_on_timeout(api):
     
     bitly_shortening_url = 'http://api.bit.ly/shorten?login=jcfigueiredo&version=2.0.1&apiKey=R_1cf5dc0fa14c2df34261fb620bd256aa&format=json&longUrl=http%3A%2F%2Fwww.matandorobosgigantes.com'
     
-    mox.StubOutWithMock(urllib2, "urlopen")
-    urllib2.urlopen(url=bitly_shortening_url).AndRaise(URLError('urlopen error timed out'))
+    mox.StubOutWithMock(httplib2.Http, "request")
+    httplib2.Http.request(bitly_shortening_url).AndRaise(URLError('urlopen error timed out'))
     
     url_to_be_shortened = 'http://www.matandorobosgigantes.com'
     
@@ -125,8 +125,8 @@ def verifying_that_urlerror_exceptions_are_reraised_but_timeout_exceptions(api):
     
     bitly_shortening_url = 'http://api.bit.ly/shorten?login=jcfigueiredo&version=2.0.1&apiKey=R_1cf5dc0fa14c2df34261fb620bd256aa&format=json&longUrl=http%3A%2F%2Fwww.matandorobosgigantes.com'
     
-    mox.StubOutWithMock(urllib2, "urlopen")
-    urllib2.urlopen(url=bitly_shortening_url).AndRaise(URLError('something different from timeout'))
+    mox.StubOutWithMock(httplib2.Http, "request")
+    httplib2.Http.request(bitly_shortening_url).AndRaise(URLError('something different from timeout'))
     
     url_to_be_shortened = 'http://www.matandorobosgigantes.com'
     
@@ -142,8 +142,8 @@ def verifying_that_any_other_exceptions_are_reraised_but_timeout_exceptions(api)
     
     bitly_shortening_url = 'http://api.bit.ly/shorten?login=jcfigueiredo&version=2.0.1&apiKey=R_1cf5dc0fa14c2df34261fb620bd256aa&format=json&longUrl=http%3A%2F%2Fwww.matandorobosgigantes.com'
     
-    mox.StubOutWithMock(urllib2, "urlopen")
-    urllib2.urlopen(url=bitly_shortening_url).AndRaise(ValueError('something different'))
+    mox.StubOutWithMock(httplib2.Http, "request")
+    httplib2.Http.request(bitly_shortening_url).AndRaise(ValueError('something different'))
     
     url_to_be_shortened = 'http://www.matandorobosgigantes.com'
     
