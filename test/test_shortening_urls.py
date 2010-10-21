@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
+import socket
+
 from nose.tools import assert_raises
-from urllib2 import URLError
 from mox import Mox
 
 import bitly
@@ -109,7 +110,7 @@ def verifying_that_a_custom_exception_is_raised_on_timeout(api):
     bitly_shortening_url = 'http://api.bit.ly/shorten?login=jcfigueiredo&version=2.0.1&apiKey=R_1cf5dc0fa14c2df34261fb620bd256aa&format=json&longUrl=http%3A%2F%2Fwww.matandorobosgigantes.com'
     
     mox.StubOutWithMock(httplib2.Http, "request")
-    httplib2.Http.request(bitly_shortening_url).AndRaise(URLError('urlopen error timed out'))
+    httplib2.Http.request(bitly_shortening_url).AndRaise(socket.timeout('timed out'))
     
     url_to_be_shortened = 'http://www.matandorobosgigantes.com'
     
@@ -126,13 +127,13 @@ def verifying_that_urlerror_exceptions_are_reraised_but_timeout_exceptions(api):
     bitly_shortening_url = 'http://api.bit.ly/shorten?login=jcfigueiredo&version=2.0.1&apiKey=R_1cf5dc0fa14c2df34261fb620bd256aa&format=json&longUrl=http%3A%2F%2Fwww.matandorobosgigantes.com'
     
     mox.StubOutWithMock(httplib2.Http, "request")
-    httplib2.Http.request(bitly_shortening_url).AndRaise(URLError('something different from timeout'))
+    httplib2.Http.request(bitly_shortening_url).AndRaise(socket.timeout('something different from timeout'))
     
     url_to_be_shortened = 'http://www.matandorobosgigantes.com'
     
     try:
         mox.ReplayAll()
-        assert_raises(URLError, api.shorten, url_to_be_shortened)
+        assert_raises(socket.timeout, api.shorten, url_to_be_shortened)
         mox.VerifyAll()
     finally:
         mox.UnsetStubs()
