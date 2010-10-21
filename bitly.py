@@ -171,7 +171,10 @@ class Api(object):
         
         # Open and return the URL 
         try:
-            url_data = self._urllib.urlopen(url=url, timeout=1).read()
+            import socket
+            timeout =  1
+            socket.setdefaulttimeout(timeout);
+            url_data = self._urllib.urlopen(url=url).read()
         except URLError, err:
             # nasty bit of hack, i know but unfortunatly urllib2 has no smart way of telling me 
             # that it was an timeout error
