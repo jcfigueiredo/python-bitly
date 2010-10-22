@@ -160,3 +160,59 @@ def test_i_can_use_the_freaking_jmp_domain_instead():
     
     yield should_have_an_API_authenticated_by_my_credentials, api
     yield should_shorten_an_url_consistently_when_a_single_string_url_is_provided, api
+
+
+def test_i_can_connect_through_a_proxy():
+    yield should_raise_when_asking_for_a_proxy_and_not_sending_required_info
+    yield should_use_proxy_whenever_passing_a_proxy_info
+
+def should_raise_when_asking_for_a_proxy_and_not_sending_required_info():
+    #'HOST': 'MYHOST.COM', #missing host info
+    proxy = { 'PORT': 8080 }
+    
+    api = bitly.Api(login='jcfigueiredo', apikey='R_1cf5dc0fa14c2df34261fb620bd256aa', proxy_info=proxy)
+    
+    assert_raises(ValueError, api.shorten, 'http://anylong.url')
+    
+    #'PORT': 8080, #missing port info
+    proxy = { 'HOST': 'MYHOST.COM' }
+    
+    api = bitly.Api(login='jcfigueiredo', apikey='R_1cf5dc0fa14c2df34261fb620bd256aa', proxy_info=proxy)
+    
+    assert_raises(ValueError, api.shorten, 'http://anylong.url')
+
+
+def should_use_proxy_whenever_passing_a_proxy_info():
+    mox = Mox()
+    
+    proxy = { 'PORT': 8080, 'HOST': 'MYPROXY.COM' }
+    
+    api = bitly.Api(login='jcfigueiredo', apikey='R_1cf5dc0fa14c2df34261fb620bd256aa', proxy_info=proxy)
+    
+    import socks
+    mox.StubOutWithMock(httplib2, 'ProxyInfo')
+    httplib2.ProxyInfo(socks.PROXY_TYPE_HTTP, proxy['HOST'], proxy['PORT']).AndReturn('proxy_info')
+    
+    params = {  'proxy_info': 'proxy_info',
+                'timeout': 1
+    }
+    
+    mox.StubOutWithMock(httplib2, 'Http')
+    http_mock = mox.CreateMockAnything()
+    httplib2.Http(**params).AndReturn(http_mock)
+    
+    bitly_shortening_url = "http://api.bit.ly/shorten?login=jcfigueiredo&version=2.0.1&apiKey=R_1cf5dc0fa14c2df34261fb620bd256aa&format=json&longUrl=http%3A%2F%2Fanylong.url"
+    
+    content = '{"errorCode": 0, "errorMessage": "", "results": {"http://anylong.url": {"userHash": "9n93fw", "hash": "9pKJVV", "shortUrl": "http://bit.ly/encurtada", "shortCNAMEUrl": "http://bit.ly/9n93fw", "shortKeywordUrl": ""}}, "statusCode": "OK"}'
+    
+    http_mock.request(bitly_shortening_url).AndReturn(('resp', content))
+    
+    try:
+        mox.ReplayAll()
+        shortened_url = api.shorten('http://anylong.url')
+        assert shortened_url == 'http://bit.ly/encurtada', 'Should be http://bit.ly/encurtada'
+        
+        mox.VerifyAll()
+    finally:
+        mox.UnsetStubs()
+

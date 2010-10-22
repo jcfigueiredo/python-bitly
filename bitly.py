@@ -21,6 +21,7 @@ import simplejson
 import urllib
 import httplib2
 import socket
+import socks
 from urllib2 import URLError
 import urlparse
 import string
@@ -59,17 +60,20 @@ class Api(object):
     }
 
     domain = 'bit.ly'
+    proxy_info = None
     
     def get_api_domain(self):
         return self.ALLOWED_API_DOMAINS[self.domain]
         
     """ API class for bit.ly """
-    def __init__(self, login, apikey, domain=None):
+    def __init__(self, login, apikey, domain=None, proxy_info=None):
         self.login = login
         self.apikey = apikey
         self._urllib = httplib2
         if domain is not None:
             self.domain = domain
+        if proxy_info:
+            self.proxy_info = proxy_info
         
     def shorten(self, longURLs, params={}):
         """ 
@@ -84,6 +88,7 @@ class Api(object):
             
         request = self._getURL("shorten", longURLs, params)
         result = self._fetchUrl(request)
+
         json = simplejson.loads(result)
         Api._CheckForError(json)
         
@@ -176,16 +181,30 @@ class Api(object):
         # Open and return the URL 
         try:
             if self._urllib is httplib2:
-                http = httplib2.Http(timeout=TIMEOUT)
+                params = {
+                    'timeout': TIMEOUT
+                }
+                
+                if self.proxy_info is not None:
+                    try:
+                        host = self.proxy_info['HOST']
+                        port = self.proxy_info['PORT']
+                    except KeyError, err:
+                        raise ValueError('You should supply a value for HOST and PORT when working with proxies. %s' % err)
+
+                    params.update(
+                        {'proxy_info': httplib2.ProxyInfo(socks.PROXY_TYPE_HTTP, host, port)}
+                    )
+                http = httplib2.Http(**params)
                 resp, content = http.request(url)
                 url_data = content
             else:
                 url_data = self._urllib.urlopen(url=url).read()
                 
         except (URLError, socket.error), err:
-            # nasty bit of hack, i know but unfortunatly urllib2 has no smart way of telling me 
-            # that it was an timeout error
-            if hasattr(err,'reason') and err.reason == 'urlopen error timed out' or unicode(err) == u'timed out':
+            # nasty bit of hack, i know but unfortunatly neither urllib2 ou httplib2 has a smart way of telling me 
+            # that it was a timeout error
+            if hasattr(err, 'reason') and err.reason == 'urlopen error timed out' or unicode(err) == u'timed out':
                 raise BitlyTimeoutError('The url %s has timed out' % url)
             raise err
         

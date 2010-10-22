@@ -12,7 +12,7 @@ setup(
     author=u'Yoav Aviram ',
     author_email='yoav.aviram@gmail.com',
     url='http://github.com/jcfigueiredo/python-bitly',
-    py_modules=['bitly'],
+    py_modules=['bitly','socks'],
     install_requires=[
         'simplejson',
         'httplib2'
