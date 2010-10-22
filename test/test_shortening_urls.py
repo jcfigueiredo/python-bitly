@@ -181,7 +181,6 @@ def should_raise_when_asking_for_a_proxy_and_not_sending_required_info():
     
     assert_raises(ValueError, api.shorten, 'http://anylong.url')
 
-
 def should_use_proxy_whenever_passing_a_proxy_info():
     mox = Mox()
     
