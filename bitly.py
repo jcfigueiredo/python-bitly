@@ -193,7 +193,7 @@ class Api(object):
                         raise ValueError('You should supply a value for HOST and PORT when working with proxies. %s' % err)
 
                     params.update(
-                        {'proxy_info': httplib2.ProxyInfo(socks.PROXY_TYPE_HTTP, host, port)}
+                        {'proxy_info': httplib2.ProxyInfo(socks.PROXY_TYPE_HTTP_NO_TUNNEL, host, port)}
                     )
                 http = httplib2.Http(**params)
                 resp, content = http.request(url)
