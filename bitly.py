@@ -164,7 +164,6 @@ class Api(object):
         if verbParam:
             for val in paramVal:
                 params.append(( verbParam, val ))
-            
         encoded_params = urllib.urlencode(params)
         return "%s%s?%s" % (self.get_api_domain(), verb, encoded_params)
        

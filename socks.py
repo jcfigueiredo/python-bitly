@@ -125,7 +125,7 @@ class socksocket(socket.socket):
             self.__proxy = (None, None, None, None, None, None)
         self.__proxysockname = None
         self.__proxypeername = None
-        self.__httptunnel = True
+        self.httptunnel = True
 
     def __recvall(self, count):
         """__recvall(count) -> data
@@ -142,7 +142,7 @@ class socksocket(socket.socket):
     def sendall(self, bytes):
         if 'encode' in dir(bytes):
             bytes = bytes.encode()
-        if not self.__httptunnel:
+        if not self.httptunnel:
             bytes = self.__rewriteproxy(bytes)
         socket.socket.sendall(self, bytes)
 
