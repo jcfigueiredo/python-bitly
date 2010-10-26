@@ -190,7 +190,7 @@ def should_use_proxy_whenever_passing_a_proxy_info():
     
     import socks
     mox.StubOutWithMock(httplib2, 'ProxyInfo')
-    httplib2.ProxyInfo(socks.PROXY_TYPE_HTTP, proxy['HOST'], proxy['PORT']).AndReturn('proxy_info')
+    httplib2.ProxyInfo(socks.PROXY_TYPE_HTTP_NO_TUNNEL, proxy['HOST'], proxy['PORT']).AndReturn('proxy_info')
     
     params = {  'proxy_info': 'proxy_info',
                 'timeout': 1
